@@ -1,15 +1,11 @@
 uniform sampler2D uTexture1;
 uniform sampler2D uTexture2;
 uniform vec2 uMouse;
+uniform vec3 uLightColor;
 varying vec2 vUv;
 uniform sampler2D uTrailTexture;
 varying vec2 vScreenUv;
-uniform vec3 uLightDirection;
-uniform vec3 uLightColor;
-uniform vec3 uAmbientColor;
-varying vec3 vNormal;
-
-
+varying vec3 vNormal; 
 
 void main() {
     
@@ -33,9 +29,29 @@ void main() {
     final = mix(final,level3,smoothstep(0.4,0.6,extrude));
     final = mix(final,level4,smoothstep(0.6,0.8,extrude));
     final = mix(final,level5,smoothstep(0.8,1.,extrude));
-    gl_FragColor = vec4(vec3(final),.8);
 
-}
+    //  // 3. Mouse-following spotlight
+    // vec3 normal = normalize(vNormal);
+    // vec3 lightDir = normalize(vec3(
+    //     uMouse.x - 0.5,    // X: -0.5 to +0.5
+    //     -(uMouse.y - 0.5), // Y: flipped and centered
+    //     -1.0               // Z: coming from above
+    // ));
+    
+    // // Lighting calculation
+    // float diff = max(dot(normal, lightDir), 0.0);
+    // float spotlight = smoothstep(0.3, 0.8, diff); // Sharper light
+    
+    // // 4. Combine with ambient
+    // vec3 ambient = vec3(0.1);
+    // vec3 lightColor = vec3(1.0, 0.9, 0.7); // Warm yellow
+    // vec3 litColor = final * (ambient + lightColor * spotlight * 2.0);
+    
+    
+
+    gl_FragColor = vec4(vec3(final),.5);
+
+} 
 
 
 

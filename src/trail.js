@@ -1,55 +1,59 @@
-export default class MouseTrailCanvas {
+export default class MouseFluidTrail {
     constructor(width = 512, height = 512) {
-        this.canvas = document.createElement('canvas');
+        this.canvas = document.createElement("canvas");
         this.canvas.width = width;
         this.canvas.height = height;
-        this.ctx = this.canvas.getContext('2d');
+        this.ctx = this.canvas.getContext("2d");
 
-        // Exact mouse tracking
-        this.mouse = { x: width/2, y: height/2 };
-        
-        // Visual smoothing parameters
-        this.fadeAlpha = 0.01;  // Trail persistence (0.05-0.1)
-        this.trailSize = 80;     // Circle size
-        this.blurSteps = 3;      // Rendering passes (1-5)
-        this.opacity = .5;      // Max brightness (0.5-1.0)
+        this.mouse = { x: width / 2, y: height / 2 };
+        this.last = { x: width / 2, y: height / 2 };
 
-        // Initialize
+        this.fadeAlpha = 0.02;
+        this.baseSize = 1;     // min size when idle
+        this.maxSize = 100;     // max size when moving fast
+        this.currentSize = this.baseSize;
+
         this.ctx.fillStyle = 'black';
         this.ctx.fillRect(0, 0, width, height);
     }
 
     update(mouse) {
-        // Update exact mouse position
-        this.mouse = mouse;
+        // Store previous mouse and update to new
+        this.last.x = this.mouse.x;
+        this.last.y = this.mouse.y;
+        this.mouse.x = mouse.x;
+        this.mouse.y = mouse.y;
 
-        // Fade existing content
-        this.ctx.fillStyle = `rgba(0, 0, 0, ${this.fadeAlpha})`;
+        // Calculate speed (distance)
+        const dx = this.mouse.x - this.last.x;
+        const dy = this.mouse.y - this.last.y;
+        const speed = Math.hypot(dx, dy);
+
+        // Smooth interpolation of size
+        const targetSize = this.baseSize + Math.min(speed * 5, this.maxSize - this.baseSize);
+        this.currentSize += (targetSize - this.currentSize) * 0.2;
+
+        // Trail fade
+        this.ctx.fillStyle = `rgba(0,0,0,${this.fadeAlpha})`;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // Draw multi-layered circle for smoothness
-        this.drawSmoothCircle();
-    }
+        // Smear trail along motion path
+        const dist = Math.hypot(dx, dy);
+        const steps = Math.max(1, Math.floor(dist / 2));
 
-    drawSmoothCircle() {
-        const { x, y } = this.mouse;
-        
-        // Draw multiple concentric circles with reducing opacity
-        for(let i = this.blurSteps; i >= 1; i--) {
-            const radius = this.trailSize * (i/this.blurSteps);
-            const alpha = this.opacity * (i/this.blurSteps);
-            
-            const gradient = this.ctx.createRadialGradient(
-                x, y, radius * 0.3, 
-                x, y, radius
-            );
-            gradient.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
-            gradient.addColorStop(1, `rgba(255, 255, 255, 0)`);
+        for (let i = 0; i < steps; i++) {
+            const t = i / steps;
+            const x = this.last.x + dx * t + Math.sin(t * 10 + performance.now() * 0.002) * 10;
+            const y = this.last.y + dy * t + Math.cos(t * 10 + performance.now() * 0.002) * 10;
 
-            this.ctx.beginPath();
-            this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+            const size = this.currentSize * (1 - t);
+
+            const gradient = this.ctx.createRadialGradient(x, y, 0, x, y, size);
+            gradient.addColorStop(0, `rgba(255,255,255,0.4)`);
+            gradient.addColorStop(1, `rgba(255,255,255,0)`);
+
             this.ctx.fillStyle = gradient;
-            this.ctx.fill();
+            this.ctx.fillRect(x - size, y - size, size * 2, size * 2);
         }
     }
 

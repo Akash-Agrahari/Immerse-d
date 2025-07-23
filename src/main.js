@@ -13,6 +13,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 // Scene
 const scene = new THREE.Scene();
+let darkMode = false;
 
 // Camera
 const camera = new THREE.PerspectiveCamera(
@@ -24,10 +25,12 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.set(0,0,5)
 
 const canvas = document.querySelector("#canvas")
+const cursor = document.querySelector("#cursor")
+const heading = document.querySelector("h1")
 
 const lenis = new Lenis({
   smooth: true,
-  lerp: .01, // feel free to tweak this
+  lerp: .005, // feel free to tweak this
 })  
 
 lenis.on('scroll', ScrollTrigger.update)
@@ -59,6 +62,9 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping
 renderer.toneMappingExposure = 1.5
 
 let materials = []
+  
+const uMode =  { value : 0.5}
+
 
 const trail = new MouseTrailCanvas() 
 let trailcanvas = trail.canvas
@@ -77,13 +83,23 @@ const mouse2d = new THREE.Vector2(0,0)
 const draco = new DRACOLoader()
 draco.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/') 
 
-
+let model;
 const loader = new GLTFLoader()
 loader.setDRACOLoader(draco)
 loader.load(glb,(gltf)=>{
-let model = gltf.scene
+ model = gltf.scene
+
 window.addEventListener("mousemove",function(event){
   
+gsap.to(cursor, {
+    x: event.clientX - 20,
+    y: event.clientY - 20,
+    duration: 0.2,
+    ease: "power2.out"
+  });
+
+
+
   let mouseX = event.clientX / window.innerWidth;
   let mouseY = 1.0 - event.clientY / window.innerHeight; // flip Y
 
@@ -120,7 +136,8 @@ window.addEventListener("mousemove",function(event){
         uTexture1 : {value: child.material.map},
         uTexture2 : {value: child.material.emissiveMap},
         uTrailTexture : {value : trailtex},
-        uLightColor: { value: new THREE.Color(0xFFE08C) } // Warm yellow light
+        uLightColor: { value: new THREE.Color(0xFFE08C) }, // Warm yellow light
+        uMode : uMode
       }
     })
     child.material = mat
@@ -144,9 +161,43 @@ function animate() {
 }
 animate();
 
+
+window.addEventListener("dblclick",function(){
+  darkMode = !darkMode
+
+gsap.fromTo(cursor, 
+    { scale: 10 },
+    { 
+      scale: window.innerWidth / 15, // Adjust for full screen
+      background : darkMode ? "black": "white",
+      duration: 1.5,
+      ease: "expo",
+      onComplete: () => {
+        gsap.to(uMode,{
+        value: darkMode ? 1.0 : .5,     
+        duration: .1,
+        ease: "power2.inOut"
+        }),
+        heading.style.color = darkMode ?  "#a0a0a0ff" : "#7e7e7e"
+        ,
+        gsap.to(cursor, {
+          background : "transparent",
+          border : darkMode ? "1px white solid" : "1px black solid",
+          scale: 1,
+          duration: 0.6,
+          ease: "expo.out"
+        });
+      }
+    }
+  );
+
+})
+
+
+
 // Handle window resize
 window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.updateProjectionMatrix()
+  renderer.setSize(window.innerWidth , window.innerHeight)
+
 });

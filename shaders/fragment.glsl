@@ -4,8 +4,10 @@ uniform vec2 uMouse;
 uniform vec3 uLightColor;
 varying vec2 vUv;
 uniform sampler2D uTrailTexture;
+uniform float uMode;
 varying vec2 vScreenUv;
-varying vec3 vNormal; 
+varying vec3 vNormal;
+
 
 void main() {
     
@@ -49,7 +51,7 @@ void main() {
     
     
 
-    gl_FragColor = vec4(vec3(final),.5);
+    gl_FragColor = vec4(vec3(final),uMode);
 
 } 
 

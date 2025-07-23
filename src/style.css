@@ -2,8 +2,15 @@
 
 * {
   margin: 0;
+  cursor:none;
   padding: 0;
   box-sizing: border-box;
+  font-family: "caligraphy";
+}
+
+@font-face {
+  font-family: "caligraphy";
+  src: url('../public/PerfectoCalligraphy.ttf');
 }
 
 html, body {
@@ -26,4 +33,29 @@ canvas{
   left: 0;
   z-index: 999;
   background: transparent;
+}
+
+h1{
+  font-size: 12vw; 
+  font-weight: 900;
+  color: #7e7e7e;
+  position: fixed; /* ← this is the key! */
+  z-index: 999;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none; /* optional: makes it non-interactive */
+}
+
+
+#cursor{
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
+  border: black 1px solid;
+  position: fixed;
+  z-index: 1000;
+  transition: transform 0.1s ease-out; /* smooth motion */
+
 }
